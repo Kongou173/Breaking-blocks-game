@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>シンプルチャットボット</title>
+  <title>生成型AIチャットボット</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
       max-width: 600px;
       margin: auto;
       padding: 20px;
+      background-color: #f7f7f7;
     }
 
     h1 {
@@ -60,7 +60,7 @@
   </style>
 </head>
 <body>
-  <h1>シンプルチャットボット</h1>
+  <h1>生成型AIチャットボット</h1>
   <div id="chat-container"></div>
   <div id="input-area">
     <input type="text" id="input-text" placeholder="メッセージを入力">
@@ -69,38 +69,32 @@
 
   <!-- TensorFlow.js -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-  <!-- Sentence Encoder -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder"></script>
+  <!-- GPT-2の事前学習モデル -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/gpt2"></script>
   <script>
     const chatContainer = document.getElementById("chat-container");
     const inputText = document.getElementById("input-text");
     const sendButton = document.getElementById("send-button");
 
-    let chatHistory = []; // 履歴を保存する
+    let gpt2Model;
 
     // モデルをロード
-    let model;
     async function loadModel() {
-      model = await use.load();
-      console.log("モデルがロードされました");
+      gpt2Model = await gpt2.load(); // GPT-2の事前学習モデルをロード
+      console.log("モデルがロードされました！");
     }
 
-    // 応答生成
-    async function generateResponse(userInput) {
-      // 応答パターン（仮の応答例）
-      const responses = [
-        "こんにちは！何かお手伝いしましょうか？",
-        "それは興味深いですね。",
-        "もう少し詳しく教えていただけますか？",
-        "わかりました！他に知りたいことはありますか？"
-      ];
-
-      // ランダムで応答を選択（仮のロジック）
-      const randomIndex = Math.floor(Math.random() * responses.length);
-      return responses[randomIndex];
+    // GPT-2で応答を生成
+    async function generateResponse(prompt) {
+      const response = await gpt2Model.generate(prompt, {
+        maxLength: 100, // 応答の長さを制限
+        temperature: 0.7, // ランダム性の調整（0.7はバランスの良い設定）
+        topP: 0.9 // トップ確率サンプリング
+      });
+      return response.generated_text;
     }
 
-    // チャットを更新
+    // チャット更新
     function updateChat(role, text) {
       const div = document.createElement("div");
       div.className = role;
@@ -109,19 +103,17 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // ボタンのクリック処理
+    // メッセージ送信時の処理
     sendButton.addEventListener("click", async () => {
       const userInput = inputText.value.trim();
       if (!userInput) return;
 
-      // ユーザーの入力を表示
+      // ユーザーのメッセージを表示
       updateChat("user", userInput);
-      chatHistory.push({ role: "user", text: userInput });
 
-      // モデルで応答生成
+      // モデルで応答を生成
       const botResponse = await generateResponse(userInput);
       updateChat("bot", botResponse);
-      chatHistory.push({ role: "bot", text: botResponse });
 
       // 入力欄をクリア
       inputText.value = "";
